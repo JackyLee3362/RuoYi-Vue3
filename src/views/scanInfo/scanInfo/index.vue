@@ -1,22 +1,6 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="扫码时间" prop="scanTime">
-        <el-date-picker clearable
-          v-model="queryParams.scanTime"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择扫码时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="国籍" prop="isForeigner">
-        <el-input
-          v-model="queryParams.isForeigner"
-          placeholder="请输入国籍"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
       <el-form-item label="姓名" prop="name">
         <el-input
           v-model="queryParams.name"
@@ -25,13 +9,25 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="生日" prop="birth">
-        <el-date-picker clearable
-          v-model="queryParams.birth"
-          type="date"
+      <el-form-item label="性别" prop="gender" style="width: 200px;">
+        <el-select v-model="queryParams.gender" placeholder="请选择性别" clearable>
+          <el-option
+            v-for="dict in sys_user_sex"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="生日" style="width: 308px">
+        <el-date-picker
+          v-model="daterangeBirth"
           value-format="YYYY-MM-DD"
-          placeholder="请选择生日">
-        </el-date-picker>
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
       </el-form-item>
       <el-form-item label="地区代码" prop="regionCode">
         <el-input
@@ -45,22 +41,6 @@
         <el-input
           v-model="queryParams.phone"
           placeholder="请输入手机号"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="扫码经度" prop="scanLatitude">
-        <el-input
-          v-model="queryParams.scanLatitude"
-          placeholder="请输入扫码经度"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="扫码纬度" prop="scanLongitude">
-        <el-input
-          v-model="queryParams.scanLongitude"
-          placeholder="请输入扫码纬度"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -115,14 +95,13 @@
 
     <el-table v-loading="loading" :data="scanInfoList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <!-- <el-table-column label="主键" align="center" prop="id" /> -->
-      <el-table-column label="扫码时间" align="center" prop="scanTime" width="180">
+      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="姓名" align="center" prop="name" />
+      <el-table-column label="性别" align="center" prop="gender">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.scanTime, '{y}-{m}-{d}') }}</span>
+          <dict-tag :options="sys_user_sex" :value="scope.row.gender"/>
         </template>
       </el-table-column>
-      <el-table-column label="国籍" align="center" prop="isForeigner" />
-      <el-table-column label="姓名" align="center" prop="name" />
       <el-table-column label="生日" align="center" prop="birth" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.birth, '{y}-{m}-{d}') }}</span>
@@ -151,6 +130,71 @@
     <!-- 添加或修改随申码对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="scanInfoRef" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="扫码时间" prop="scanTime">
+          <el-date-picker clearable
+            v-model="form.scanTime"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择扫码时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="国籍" prop="isForeigner">
+          <el-input v-model="form.isForeigner" placeholder="请输入国籍" />
+        </el-form-item>
+        <el-form-item label="标志" prop="tag">
+          <el-input v-model="form.tag" placeholder="请输入标志" />
+        </el-form-item>
+        <el-form-item label="系统来源" prop="systemSource">
+          <el-input v-model="form.systemSource" placeholder="请输入系统来源" />
+        </el-form-item>
+        <el-form-item label="公司名" prop="companyName">
+          <el-input v-model="form.companyName" placeholder="请输入公司名" />
+        </el-form-item>
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="form.name" placeholder="请输入姓名" />
+        </el-form-item>
+        <el-form-item label="身份标识" prop="card">
+          <el-input v-model="form.card" placeholder="请输入身份标识" />
+        </el-form-item>
+        <el-form-item label="性别" prop="gender">
+          <el-select v-model="form.gender" placeholder="请选择性别">
+            <el-option
+              v-for="dict in sys_user_sex"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="生日" prop="birth">
+          <el-date-picker clearable
+            v-model="form.birth"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择生日">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="地区代码" prop="regionCode">
+          <el-input v-model="form.regionCode" placeholder="请输入地区代码" />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="扫码颜色" prop="color">
+          <el-input v-model="form.color" placeholder="请输入扫码颜色" />
+        </el-form-item>
+        <el-form-item label="扫码方法" prop="scanMethod">
+          <el-input v-model="form.scanMethod" placeholder="请输入扫码方法" />
+        </el-form-item>
+        <el-form-item label="扫码经度" prop="scanLatitude">
+          <el-input v-model="form.scanLatitude" placeholder="请输入扫码经度" />
+        </el-form-item>
+        <el-form-item label="扫码纬度" prop="scanLongitude">
+          <el-input v-model="form.scanLongitude" placeholder="请输入扫码纬度" />
+        </el-form-item>
+        <el-form-item label="软删除" prop="deleted">
+          <el-input v-model="form.deleted" placeholder="请输入软删除" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -166,6 +210,7 @@
 import { listScanInfo, getScanInfo, delScanInfo, addScanInfo, updateScanInfo } from "@/api/scanInfo/scanInfo";
 
 const { proxy } = getCurrentInstance();
+const { sys_user_sex } = proxy.useDict('sys_user_sex');
 
 const scanInfoList = ref([]);
 const open = ref(false);
@@ -176,20 +221,18 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
+const daterangeBirth = ref([]);
 
 const data = reactive({
   form: {},
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    scanTime: null,
-    isForeigner: null,
     name: null,
+    gender: null,
     birth: null,
     regionCode: null,
     phone: null,
-    scanLatitude: null,
-    scanLongitude: null
   },
   rules: {
   }
@@ -200,6 +243,11 @@ const { queryParams, form, rules } = toRefs(data);
 /** 查询随申码列表 */
 function getList() {
   loading.value = true;
+  queryParams.value.params = {};
+  if (null != daterangeBirth && '' != daterangeBirth) {
+    queryParams.value.params["beginBirth"] = daterangeBirth.value[0];
+    queryParams.value.params["endBirth"] = daterangeBirth.value[1];
+  }
   listScanInfo(queryParams.value).then(response => {
     scanInfoList.value = response.rows;
     total.value = response.total;
@@ -224,13 +272,15 @@ function reset() {
     companyName: null,
     name: null,
     card: null,
+    gender: null,
     birth: null,
     regionCode: null,
     phone: null,
     color: null,
     scanMethod: null,
     scanLatitude: null,
-    scanLongitude: null
+    scanLongitude: null,
+    deleted: null
   };
   proxy.resetForm("scanInfoRef");
 }
@@ -243,6 +293,7 @@ function handleQuery() {
 
 /** 重置按钮操作 */
 function resetQuery() {
+  daterangeBirth.value = [];
   proxy.resetForm("queryRef");
   handleQuery();
 }
