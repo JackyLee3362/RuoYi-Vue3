@@ -115,7 +115,7 @@
 
     <el-table v-loading="loading" :data="scanInfoList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <!-- <el-table-column label="主键" align="center" prop="id" /> -->
       <el-table-column label="扫码时间" align="center" prop="scanTime" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.scanTime, '{y}-{m}-{d}') }}</span>
